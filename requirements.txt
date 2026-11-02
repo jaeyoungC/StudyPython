@@ -1,0 +1,5 @@
+pytest>=8
+# 8주차부터 사용
+# fastapi
+# uvicorn
+# httpx
