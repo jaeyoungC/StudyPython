@@ -33,13 +33,13 @@ class TaskService:
     @staticmethod
     def _owned(task: Task, owner_id: int | None) -> bool:
         """owner_id 가 None 이면 항상 True(검사 안 함), 아니면 task.owner_id 와 같아야 True."""
-        # TODO
-        raise NotImplementedError
+        # TODO: 지금은 누구나 모든 할 일을 본다(17단원 상태). 소유권 규칙으로 바꾸세요.
+        return True
 
     def _visible(self, tasks: list[Task], owner_id: int | None) -> list[Task]:
         """owner_id 가 볼 수 있는 것만 남긴 새 리스트."""
-        # TODO
-        raise NotImplementedError
+        # TODO: _owned 로 거른다.
+        return list(tasks)
 
     # -- 규칙 ------------------------------------------------------------
 

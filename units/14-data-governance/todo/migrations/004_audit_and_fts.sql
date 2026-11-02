@@ -1,0 +1,10 @@
+-- 004: 거버넌스 — 완료 시각, 감사 로그, 전문 검색.
+-- TODO (1) tasks 에 completed_at TEXT 열 추가 (ISO 날짜시각, 미완료면 NULL). 보존 기간 계산의 기준이 된다.
+-- TODO (2) audit_log 테이블: id INTEGER PRIMARY KEY, at TEXT NOT NULL, actor TEXT NOT NULL,
+--          action TEXT NOT NULL, task_id INTEGER (FK 를 걸지 않는다 — 지워진 할 일의 기록도 남아야 하므로),
+--          detail TEXT. "추가만 하는(append-only) 테이블" 이다. UPDATE/DELETE 를 막는 트리거를 더해도 좋다.
+-- TODO (3) FTS5 가상 테이블: 
+--          CREATE VIRTUAL TABLE IF NOT EXISTS tasks_fts USING fts5(title, content='tasks', content_rowid='id');
+--          그리고 tasks 의 INSERT/UPDATE/DELETE 때 tasks_fts 를 따라 바꾸는 트리거 3개.
+--          (공식 문서 "External Content Tables" 절의 예시를 그대로 옮겨도 된다: https://sqlite.org/fts5.html#external_content_tables)
+--          기존 행 색인: INSERT INTO tasks_fts(tasks_fts) VALUES ('rebuild');
