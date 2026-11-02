@@ -37,15 +37,45 @@
 전체를 훑어야 하고("공부"가 "공부방"에도 걸립니다), E 는 모든 행을 고쳐 써야 합니다. 같은 사실("이 태그 이름은 공부다")을
 여러 행에 복사해 두었기 때문입니다. **한 사실은 한 곳에** — 이것이 정규화의 핵심이고, 그 대가가 JOIN 입니다.
 
+접근 패턴에서 스키마로 가는 결정은 대략 이런 순서입니다.
+
+```mermaid
+flowchart TD
+    A["접근 패턴 목록을 적는다"] --> B{"한 할 일에 태그가<br/>여러 개인가?"}
+    B -- "아니오 (1:1)" --> C["tasks 에 열 하나 추가"]
+    B -- "예" --> D{"태그 하나가 여러<br/>할 일에 붙는가?"}
+    D -- "아니오 (1:N)" --> E["tags 테이블 + tasks 를 가리키는 FK"]
+    D -- "예 (N:M)" --> F["tags 테이블 + 연결 테이블 task_tags"]
+    F --> G{"태그 이름 바꾸기(E)가<br/>필요한가?"}
+    G -- "예" --> H["이름은 tags 한 곳에만 (정규화)"]
+    G -- "아니오" --> I["tasks.tags_csv 도 후보<br/>(단, B 는 전체 훑기)"]
+```
+
+읽는 법: 마름모가 질문이고, 답에 따라 테이블 수가 달라집니다. 할 일–태그는 N:M 이고 E 패턴이 있으므로 오른쪽 아래 경로입니다.
+
 ### 세 테이블의 모양
 
+```mermaid
+erDiagram
+    tasks ||--o{ task_tags : "붙는다"
+    tags  ||--o{ task_tags : "붙는다"
+    tasks {
+        INTEGER id PK
+        TEXT title "NOT NULL, CHECK"
+        INTEGER done "0 또는 1"
+    }
+    tags {
+        INTEGER id PK
+        TEXT name "UNIQUE"
+    }
+    task_tags {
+        INTEGER task_id PK, FK "→ tasks.id, CASCADE"
+        INTEGER tag_id PK, FK "→ tags.id, CASCADE"
+    }
 ```
-tasks                tags               task_tags (연결 테이블)
----------            ---------          -----------------------
-id  PK               id   PK            task_id  FK → tasks.id ┐ 복합 PK
-title                name UNIQUE        tag_id   FK → tags.id  ┘
-done
-```
+
+읽는 법: `||--o{` 는 "왼쪽 한 행에 오른쪽 행 0개 이상"입니다. `tasks` 와 `tags` 는 서로를 직접 가리키지 않고,
+가운데 `task_tags` 의 행 하나가 "이 할 일에 이 태그" 라는 사실 하나를 적습니다.
 
 `task_tags` 는 "할 일 3번에 태그 2번이 붙었다"는 사실만 적는 행의 모음입니다. 복합 기본 키가 같은 쌍의 중복을 막고,
 외래 키(foreign key, FK)가 "존재하지 않는 할 일"에 태그를 붙이는 것을 막습니다. SQLite 는 FK 검사를 **기본으로 꺼 두므로**

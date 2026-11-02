@@ -19,6 +19,25 @@
 | 브랜치(branch)와 머지(merge) | `main`을 깨끗하게 두고 브랜치에서 작업, 끝나면 합치기. 충돌(conflict)이 무엇인지 | [Pro Git 3장](https://git-scm.com/book/ko/v2/Git-%EB%B8%8C%EB%9E%9C%EC%B9%98-%EB%B8%8C%EB%9E%9C%EC%B9%98%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80) |
 | PR(pull request)과 코드 리뷰 | 변경을 설명하고 검토받는 단위. 혼자서도 "리뷰어의 눈"으로 자기 diff를 읽는 연습 | [GitHub PR 문서](https://docs.github.com/ko/pull-requests) |
 
+### 그림으로 보는 한 단원의 흐름
+
+```mermaid
+gitGraph
+    commit id: "main"
+    branch unit-03
+    checkout unit-03
+    commit id: "TODO 채우기"
+    commit id: "테스트 통과"
+    commit id: "NOTES.md"
+    checkout main
+    merge unit-03 id: "PR 머지"
+    branch unit-04
+    checkout unit-04
+    commit id: "다음 단원"
+```
+
+읽는 법: `main`은 항상 "끝난 단원"만 담고, 작업은 단원 이름의 브랜치에서 합니다. PR이 머지되는 순간이 그 단원의 끝입니다.
+
 ## 과제
 
 1. **기본 흐름 연습.** 이 저장소에서 다음을 순서대로 합니다.

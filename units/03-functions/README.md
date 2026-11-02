@@ -24,6 +24,25 @@
 
 시작 코드의 `tasks: list[dict]` 같은 표기는 **타입 힌트(type hint)** 입니다. 실행에는 영향이 없고 "이 인자는 딕셔너리의 리스트"라고 사람과 도구에게 알려 주는 메모입니다. 05단원에서 제대로 다룹니다.
 
+### 함수와 데이터의 관계
+
+```mermaid
+flowchart LR
+    CLI["main()<br/>사용자 입력을 읽는다"] --> add["add_task"]
+    CLI --> done["complete_task"]
+    CLI --> rm["remove_task"]
+    CLI --> ls["list_tasks"]
+    add -- "바꾼다" --> T[("tasks: list[dict]<br/>상태는 여기 하나뿐")]
+    done -- "바꾼다" --> T
+    rm -- "바꾼다" --> T
+    ls -. "읽기만, 새 리스트 반환" .-> T
+    done --> find["find_task"]
+    rm --> find
+    find -. "읽기만" .-> T
+```
+
+읽는 법: 실선은 `tasks`를 **바꾸는** 함수(부작용), 점선은 읽기만 하는 함수입니다. 상태가 한 곳(`tasks`)에만 있다는 점이 04단원에서 클래스로 묶는 근거가 됩니다.
+
 ## 과제
 
 `todo_memory.py` 의 `TODO` 를 채워 `pytest units/03-functions` 을 모두 통과시키세요.

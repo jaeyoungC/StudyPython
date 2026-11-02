@@ -18,6 +18,17 @@ pytest의 기능 중 이후 모든 단원에서 쓰는 다섯 가지(`assert`, `
 | 디버거(debugger) | `print`로 값 찍기 → `breakpoint()`로 멈춰서 변수 보기 (`n` 다음 줄, `s` 함수 안으로, `p 변수`, `c` 계속, `q` 종료) | [pdb 문서](https://docs.python.org/ko/3/library/pdb.html) |
 | pytest 기본 | `assert`, `pytest.raises`, `@pytest.mark.parametrize`, `tmp_path`, `monkeypatch` | [pytest 시작하기](https://docs.pytest.org/en/stable/getting-started.html), [fixture 안내](https://docs.pytest.org/en/stable/how-to/fixtures.html) |
 
+### 트레이스백은 아래에서 위로
+
+```mermaid
+flowchart BT
+    E["<b>ZeroDivisionError: division by zero</b><br/>① 무엇이 잘못됐나"] --> L["buggy.py, line 17, in average<br/>return total / len(numbers)<br/>② 어디서 (내 코드의 마지막 줄)"]
+    L --> T["test_unit02.py, line 21, in test_average_of_empty_list_raises<br/>average([])<br/>③ 누가 불렀나 (어떤 입력으로)"]
+    T --> P["pytest 내부 프레임들<br/>④ 보통 건너뛴다"]
+```
+
+읽는 법: 화살표 방향이 읽는 순서입니다. 맨 아래 줄(①)에서 오류의 종류를, 그 위(②)에서 내 코드의 어느 줄인지를, 그 위(③)에서 어떤 입력으로 불렸는지를 봅니다. 위로 갈수록 내 코드에서 멀어집니다.
+
 ### pytest 다섯 가지, 한 줄씩
 
 | 기능 | 하는 일 | 쓰는 모양 |

@@ -23,6 +23,24 @@
 | `argparse` | 하위 명령(subcommand), 위치 인자, 옵션, 자동 `--help`. `parse_args(argv)`에 리스트를 넘기면 테스트 가능 | [argparse 튜토리얼](https://docs.python.org/ko/3/howto/argparse.html) |
 | 진입점과 종료 코드 | `python -m todo`는 `todo/__main__.py`를 실행. `main(argv) -> int`가 종료 코드를 돌려주고 `sys.exit`는 한 곳에서만 | [`__main__` 문서](https://docs.python.org/ko/3/library/__main__.html) |
 
+### 패키지의 의존 방향
+
+```mermaid
+flowchart TB
+    subgraph pkg["todo/ 패키지"]
+        M["__main__.py<br/>python -m todo 진입점<br/>sys.exit(main())"]
+        C["cli.py<br/>사용자와 말하는 법<br/>argparse, print, 종료 코드"]
+        D["models.py<br/>할 일의 규칙<br/>Task, TaskList, 예외"]
+    end
+    T["test_unit06.py"] --> C
+    M --> C
+    C --> D
+    S["storage_json.py (07단원)"] -.-> D
+    A["api.py (17단원, HTTP)"] -.-> D
+```
+
+읽는 법: 화살표는 "임포트한다"입니다. 모두 `models.py`를 향하고, `models.py`는 아무것도 임포트하지 않습니다. 그래서 나중에 `cli.py` 옆에 `api.py`가 생겨도 `models.py`는 그대로입니다. 반대 방향 화살표(`models` → `cli`)가 생기면 구조가 무너집니다.
+
 ### 테스트할 수 있는 CLI의 모양
 
 ```python

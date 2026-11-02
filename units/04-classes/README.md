@@ -19,6 +19,35 @@
 | `self`와 메서드(method) | 메서드는 "이 객체의" 함수. `self`는 그 객체 자신. `task.complete()`는 `Task.complete(task)`와 같다 | 같은 장 9.3절 |
 | 직접 만든 예외 | `class TaskNotFoundError(ValueError): pass` — 의미가 분명한 이름의 예외. 상위 예외로도 잡힌다 | [8.6 사용자 정의 예외](https://docs.python.org/ko/3/tutorial/errors.html#user-defined-exceptions) |
 
+### 이 단원의 구조
+
+```mermaid
+classDiagram
+    class Task {
+        +int id
+        +str title
+        +bool done
+        +complete()
+    }
+    class TaskList {
+        -list~Task~ _tasks
+        +add(title) Task
+        +get(id) Task
+        +complete(id) Task
+        +remove(id) Task
+        +all() list
+        +open_tasks() list
+        +count() int
+    }
+    class TaskNotFoundError {
+        ValueError를 상속
+    }
+    TaskList "1" o-- "0..*" Task : 가지고 있다
+    TaskList ..> TaskNotFoundError : get()이 던진다
+```
+
+읽는 법: `TaskList`가 여러 `Task`를 **가지고 있고**(마름모), 밖에서는 `_tasks`를 직접 만지지 않고 메서드로만 바꿉니다. 03단원의 "함수 + `tasks` 리스트"가 이 두 상자 안으로 들어온 것입니다.
+
 ### 03단원 코드와 나란히 보기
 
 | 03단원 (함수 + 딕셔너리) | 04단원 (클래스) |

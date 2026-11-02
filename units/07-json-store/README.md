@@ -22,6 +22,25 @@
 | 원자적 쓰기(atomic write) | 임시 파일에 다 쓴 뒤 `os.replace(tmp, path)`. 쓰는 도중 꺼져도 원본은 멀쩡하거나 새 파일이거나 둘 중 하나 | [os.replace](https://docs.python.org/ko/3/library/os.html#os.replace) |
 | 예외 감싸기 | 라이브러리 예외(`json.JSONDecodeError`)를 내 프로그램의 예외(`StoreError`)로 바꿔 올리기. `raise StoreError(...) from error`로 원인을 보존 | [8.5 예외 연쇄](https://docs.python.org/ko/3/tutorial/errors.html#exception-chaining) |
 
+### 원자적 쓰기: 두 경우를 나란히
+
+```mermaid
+sequenceDiagram
+    participant P as 프로그램
+    participant T as todo.tmp
+    participant F as todo.json
+    Note over P,F: 정상 저장
+    P->>T: 전체 내용을 쓴다
+    P->>F: os.replace(tmp → json) 한 번에 교체
+    Note over F: 항상 "이전 전체" 아니면 "새 전체"
+    Note over P,F: 쓰는 도중 꺼짐
+    P->>T: 쓰다가 중단 (반쪽짜리)
+    P--xF: replace까지 못 감
+    Note over F: 원본 그대로 살아 있음
+```
+
+읽는 법: 원본 `todo.json`은 **다 쓴 뒤 이름을 바꾸는 순간**에만 바뀝니다. 그래서 중간에 꺼져도 깨진 파일이 원본 자리를 차지하지 못합니다.
+
 ### 왜 그냥 `write_text`로 덮어쓰면 안 되나
 
 `path.write_text(...)`는 파일을 먼저 비우고 쓰기 시작합니다. 그 사이에 프로세스가 죽으면 **빈 파일 또는 반쯤 쓴 파일**이 남습니다.

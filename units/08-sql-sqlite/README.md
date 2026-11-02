@@ -40,6 +40,26 @@ conn.execute(f"SELECT id FROM tasks WHERE title = '{title}'")      # 절대 금�
 conn.execute("SELECT id FROM tasks WHERE title = ?", (title,))      # 이렇게
 ```
 
+```mermaid
+sequenceDiagram
+    participant U as 사용자 입력<br/>' OR '1'='1
+    participant P as 파이썬 코드
+    participant D as SQLite
+    rect rgb(255, 235, 235)
+    Note over P: f-string 조립 (금지)
+    P->>D: "SELECT ... WHERE title = '' OR '1'='1'" (문장 하나)
+    D-->>P: 모든 행 (조건이 항상 참)
+    end
+    rect rgb(235, 255, 235)
+    Note over P: ? 자리표시자
+    P->>D: 문장 "WHERE title = ?" + 값 ("' OR '1'='1",) (따로)
+    D-->>P: [] (그런 제목은 없음)
+    end
+```
+
+읽는 법: 위 상자는 입력이 SQL 문장에 섞여 들어가 DB 가 "문법"으로 해석하는 경로, 아래 상자는 문장과 값이 따로 전달되어
+입력이 끝까지 "값"으로 남는 경로입니다.
+
 첫 줄은 사용자가 입력한 문자열을 **SQL 문법의 일부**로 붙여 넣습니다. `title` 이 `' OR '1'='1` 이면 실행되는 SQL 은
 `... WHERE title = '' OR '1'='1'` 이 되어 조건이 항상 참이고, 테이블의 모든 행이 나옵니다. 둘째 줄은 SQL 문장과 값을
 따로 DB 에 보내므로 값 안에 따옴표가 백 개 있어도 그냥 글자입니다. `injection_demo.py` 를 실행해 눈으로 확인하세요.

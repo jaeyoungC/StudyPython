@@ -19,6 +19,21 @@
 | 타입 힌트(type hint) | `list[Task]`, `dict[str, int]`, `Task \| None`(없을 수도 있음), 반환 `-> int`. 실행에는 영향 없음 | [typing 문서](https://docs.python.org/ko/3/library/typing.html) |
 | 직렬화 | 객체 → 딕셔너리(`dataclasses.asdict`) → 나중에 JSON. 반대 방향 `from_dict`는 직접 쓴다(검증 포함) | 같은 dataclasses 문서의 `asdict` |
 
+### 직렬화: 객체와 데이터 사이
+
+```mermaid
+flowchart LR
+    O["Task 객체<br/>Task(id=1, title='산책', done=False)<br/>메모리 안, 메서드 있음"]
+    D["dict<br/>{'id': 1, 'title': '산책', 'done': False}<br/>Python 안, 메서드 없음"]
+    J["JSON 문자열 / HTTP 본문<br/>{&quot;id&quot;: 1, &quot;title&quot;: &quot;산책&quot;, ...}<br/>프로그램 밖, 텍스트"]
+    O -- "to_dict() (asdict)" --> D
+    D -- "from_dict() + 검증" --> O
+    D -- "json.dumps (07단원)" --> J
+    J -- "json.loads" --> D
+```
+
+읽는 법: 객체는 프로그램 안에서만 살 수 있어서, 밖(파일·네트워크)으로 나갈 때는 딕셔너리를 거쳐 텍스트가 됩니다. 들어오는 방향(`from_dict`)에 **검증**이 있는 이유는 밖에서 온 데이터는 믿을 수 없기 때문입니다.
+
 ### `field(default_factory=list)`가 필요한 이유
 
 ```python
