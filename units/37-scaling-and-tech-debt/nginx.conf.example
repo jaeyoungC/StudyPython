@@ -1,0 +1,33 @@
+# 37단원: nginx 를 로드 밸런서로. 저장소 루트에 nginx.conf 로 복사.
+events {}
+
+http {
+    upstream todo_api {
+        # 기본은 라운드 로빈(round robin): 요청을 번갈아 보낸다.
+        # least_conn;  ← 연결 수가 적은 쪽으로. 요청 처리 시간이 들쭉날쭉하면 이쪽이 낫다
+        server app1:8000 max_fails=3 fail_timeout=10s;   # 3번 실패하면 10초간 제외 (28단원 브레이커와 같은 생각)
+        server app2:8000 max_fails=3 fail_timeout=10s;
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://todo_api;
+            proxy_set_header Host $host;
+            proxy_set_header X-Request-ID $request_id;        # 31단원: 없으면 여기서 만들어 준다
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 27단원: 속도 제한의 IP 키는 이 헤더를 봐야 한다
+            proxy_connect_timeout 2s;                         # 25단원: 타임아웃은 모든 층에
+            proxy_read_timeout 10s;
+            proxy_next_upstream error timeout http_502 http_503;  # 한쪽이 죽으면 다른 쪽으로 (GET 만 안전. POST 재시도는 26단원 멱등성 키가 있어야)
+        }
+
+        location /metrics {
+            # 32단원: 지표는 내부망에서만. 실제 운영에서는 allow/deny 로 제한
+            proxy_pass http://todo_api;
+            allow 127.0.0.1;
+            allow 172.16.0.0/12;
+            deny all;
+        }
+    }
+}

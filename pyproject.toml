@@ -1,0 +1,7 @@
+[project]
+name = "studypython"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["units"]

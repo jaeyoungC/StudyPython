@@ -1,0 +1,82 @@
+# 34단원: GitHub Actions CI 템플릿.
+# 저장소의 .github/workflows/ci.yml 로 복사한 뒤 TODO 를 채우세요. 이 파일 자체는 실행되지 않습니다.
+#
+# 읽는 순서: on(언제) → jobs(무엇을) → steps(어떻게). 각 job 은 새 가상 머신에서 돈다.
+
+name: CI
+
+on:
+  pull_request:            # PR 이 열리거나 갱신될 때 — "깨진 PR 막기"의 핵심
+  push:
+    branches: [main]       # main 에 머지된 뒤에도 한 번 더 (머지 결과 자체를 검증)
+
+# 같은 PR 에 새 커밋이 오면 이전 실행을 취소한다 (비용 절약)
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read           # 최소 권한(30단원): CI 는 코드를 읽기만 한다
+
+jobs:
+  lint:
+    name: 린트와 정적 분석
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip                      # requirements*.txt 해시로 pip 캐시
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .                  # 스타일·버그 패턴. 설정은 pyproject.toml [tool.ruff]
+      - run: ruff format --check .
+      - run: bandit -r todo/ notifier/ -q  # 29단원
+      - run: pip-audit -r requirements.txt # 29단원. TODO: 실패를 차단할지 경고만 할지 ADR-0021 대로
+
+  test:
+    name: 테스트 (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint                            # 린트가 깨지면 테스트는 돌리지 않는다 (빠른 실패, 비용 절약)
+    strategy:
+      fail-fast: false                     # 한 버전이 깨져도 다른 버전 결과는 본다
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: 테스트 + 커버리지
+        run: |
+          coverage run -m pytest -q
+          coverage report --fail-under=80  # TODO: 24단원에서 정한 의미 있는 숫자로. 숫자 자체가 목표가 되지 않게
+        env:
+          TODO_API_SECRET: ci-only-not-a-real-secret   # 35단원: 비밀값은 환경 변수. 진짜 값은 Settings → Secrets 에
+      - name: 커버리지 리포트 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: .coverage
+
+  build:
+    name: 컨테이너 이미지 빌드 (35단원 이후)
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'        # PR 에서는 빌드까지 하지 않는다. TODO: 팀 규칙에 맞게
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t todo-api:${{ github.sha }} .
+      - run: |
+          docker run -d --rm -p 8000:8000 -e TODO_API_SECRET=ci --name smoke todo-api:${{ github.sha }}
+          sleep 3
+          curl --fail http://localhost:8000/health   # 스모크 테스트: 이미지가 실제로 뜨는가
+          docker stop smoke
+
+# 브랜치 보호 규칙(저장소 Settings → Branches → main):
+#   - Require a pull request before merging
+#   - Require status checks to pass: "린트와 정적 분석", "테스트 (py3.12)", "테스트 (py3.13)"
+#   이것이 없으면 CI 는 "빨간 불을 보여 주기"만 할 뿐 "깨진 PR 을 막지" 못한다.

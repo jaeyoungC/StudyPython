@@ -1,0 +1,35 @@
+# 35단원: todo API 컨테이너 이미지 템플릿. 저장소 루트에 Dockerfile 로 복사한 뒤 TODO 를 채우세요.
+#
+# 원칙: (1) 이미지는 환경마다 같다 — 설정은 환경 변수로 (12-factor)  (2) 작게  (3) root 로 돌리지 않는다
+
+# 1단계: 의존성 설치 (빌드 전용 레이어)
+FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# 2단계: 실행 이미지 — 빌드 도구 없이 설치 결과만 복사
+FROM python:3.12-slim
+WORKDIR /app
+
+# 최소 권한(30단원): 전용 사용자
+RUN useradd --create-home --uid 10001 app
+COPY --from=builder /install /usr/local
+COPY todo/ ./todo/
+# TODO: notifier 는 별도 이미지(Dockerfile.notifier) 로. 같은 이미지에 넣지 않는다 (22단원: 서비스 분리)
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TODO_HOST=0.0.0.0 \
+    TODO_PORT=8000
+# 비밀값(TODO_API_SECRET 등)은 여기 쓰지 않는다. 실행 시 -e 또는 호스팅의 환경 변수 설정으로.
+
+USER app
+EXPOSE 8000
+
+# 컨테이너 자체의 헬스 체크. 호스팅 서비스는 보통 자기 방식(HTTP 경로 설정)을 따로 쓴다.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).status == 200 else 1)"
+
+# TODO: 진입점. uvicorn 을 쓴다면:
+CMD ["python", "-m", "uvicorn", "todo.api:app", "--host", "0.0.0.0", "--port", "8000"]
