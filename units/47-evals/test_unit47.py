@@ -30,7 +30,11 @@ EVAL_SET = Path(__file__).with_name("evals") / "parse_eval_set.jsonl"
 
 @pytest.fixture
 def cases():
-    return load_eval_set(EVAL_SET)
+    try:
+        return load_eval_set(EVAL_SET)
+    except NotImplementedError:
+        # load_eval_set 을 구현하기 전에는 None 을 넘긴다. 테스트 본문이 먼저 실패 메시지를 낸다.
+        return None
 
 
 def test_load_eval_set_reads_all_cases_with_tags(cases):

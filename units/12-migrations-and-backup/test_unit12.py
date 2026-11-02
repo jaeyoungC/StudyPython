@@ -11,6 +11,22 @@ from todo.backup import backup_to, restore_from
 from todo.migrate import MIGRATIONS_DIR, MigrationError, current_version, load_migrations, migrate, pending
 from todo.storage_sqlite import SqliteTaskStore
 
+
+class NotYetImplemented:
+    """픽스처 안에서 아직 구현되지 않은 메서드를 만났을 때 돌려주는 대역.
+
+    픽스처에서 예외가 나면 pytest 는 ERROR 로 표시한다. 대신 이 객체를 돌려주고, 테스트가 처음 쓰는 순간
+    분명한 메시지로 FAILED 가 되게 한다.
+    """
+
+    def __init__(self, what: str) -> None:
+        self.what = what
+
+    def _fail(self, *args, **kwargs):
+        pytest.fail(f"{self.what} 을(를) 아직 구현하지 않음")
+
+    __getattr__ = __len__ = __iter__ = __call__ = _fail
+
 # 11단원 시절 init_schema() 가 만들던 스키마 (마이그레이션 도입 전, user_version = 0 인 DB 를 흉내 낸다)
 LEGACY_SCHEMA = """
 CREATE TABLE tasks (
@@ -34,7 +50,10 @@ def conn():
 @pytest.fixture
 def store(conn):
     s = SqliteTaskStore(conn)
-    s.init_schema()
+    try:
+        s.init_schema()  # 안에서 migrate() 를 부른다
+    except NotImplementedError:
+        return NotYetImplemented("migrate()")
     return s
 
 

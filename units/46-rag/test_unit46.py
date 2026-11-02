@@ -26,11 +26,15 @@ def index():
     """:memory: FTS5 인덱스에 할 일 네 건을 넣어 둔다 (제목 + 메모)."""
     conn = sqlite3.connect(":memory:")
     idx = Fts5Index(conn, size=200, overlap=40)
-    idx.init_schema()
-    idx.add(1, "치과 예약. 스케일링 받고 사랑니 상담하기. 태그: 건강")
-    idx.add(2, "세금 신고. 홈택스에서 종합소득세 신고. 태그: 돈")
-    idx.add(3, "운동화 사기. 러닝용으로 가벼운 것. 태그: 쇼핑 건강")
-    idx.add(4, "책 반납. 도서관에 소설 두 권. 태그: 집안일")
+    try:
+        idx.init_schema()
+        idx.add(1, "치과 예약. 스케일링 받고 사랑니 상담하기. 태그: 건강")
+        idx.add(2, "세금 신고. 홈택스에서 종합소득세 신고. 태그: 돈")
+        idx.add(3, "운동화 사기. 러닝용으로 가벼운 것. 태그: 쇼핑 건강")
+        idx.add(4, "책 반납. 도서관에 소설 두 권. 태그: 집안일")
+    except NotImplementedError:
+        # Fts5Index 를 구현하기 전에는 None 을 넘긴다. 테스트 본문이 먼저 실패 메시지를 낸다.
+        return None
     return idx
 
 

@@ -111,6 +111,23 @@ class TaskService:
 - 45: `POST /tasks/parse` — 자연어 → Task 초안 (LLM)
 - 46: `GET /tasks/ask?q=` — RAG
 
+## 단원을 쓰면서 명세에 더해진 것 (실제 코드가 기준)
+
+| 어디서 | 무엇 | 이유 |
+| --- | --- | --- |
+| 09 | `Task.tags`는 정렬·중복 제거된 리스트 (`normalize_tags`) | JSON 저장소와 SQLite 저장소의 결과가 같게 비교되도록 |
+| 11 | `Task.version: int = 1`, `rename(task_id, title, expected_version)`, `ConflictError(ValueError)` | lost update를 재현하고 낙관적 잠금으로 막는 교재 |
+| 12 | `init_schema()`는 `migrate(conn)`에 위임, `MigrationError`, `backup_to()/restore_from()` | 스키마의 진실은 마이그레이션 파일 하나 |
+| 13 | `add_dependency`, `blockers`, `ready_tasks`, 마이그레이션 003 | 할 일 의존 관계(그래프)를 재귀 CTE로 |
+| 14 | `pii.py`, `retention.py`, `vectors.py`, 마이그레이션 004 (`completed_at`, `audit_log`, `tasks_fts`), `SqliteTaskStore(conn, clock=...)` | 거버넌스 과제의 재료 |
+| 15 | `AlreadyDoneError(ValueError)` | API에서 409(이미 완료)와 422(잘못된 입력)를 구분 |
+| 18 | `Task.owner_id: int \| None`, 마이그레이션 `004_add_owner.sql`(3단계 패키지 기준), 서비스 메서드의 `owner_id=None` 인자. 남의 할 일은 **404** | 소유권 검사를 CLI·옛 테스트를 깨지 않고 추가 |
+| 18·21 | `create_app(service, users=None, cors_origins=())` | 인증 사용자 저장소와 CORS 허용 출처 주입 |
+| 19·20 | `TaskService(repo, clock, cache=None, events=None)` | 캐시와 이벤트 발행을 선택 주입 |
+| 20 | `todo/events.py`, `NotificationWorker`(스레드 + `queue.Queue`) | 서비스 계층을 스레드와 무관하게 유지 |
+| 22 | notifier 계약: `POST /notifications` → 202, `HttpNotifier(base_url, client, timeout)` | 테스트는 `TestClient`를 클라이언트로 주입(소켓 없음) |
+| 35 | 설정 모듈은 단원 폴더에서 `app_config.py`, 옮길 때 `todo/config.py` | 저장소 안 모듈 이름 충돌 방지 |
+
 ## 테스트 규약
 
 - 파일 이름 `test_unitNN.py` (저장소 전체에서 유일). 실행은 **단원별로**: `pytest units/NN-slug`

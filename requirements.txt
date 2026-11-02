@@ -1,10 +1,19 @@
-# 0~2단계: 표준 라이브러리 + pytest 만 있으면 됩니다.
+# 0~2단계 (00~14단원): 표준 라이브러리 + pytest 만 있으면 됩니다.
 pytest>=8
 
-# 3단계(17단원)부터 — 해당 단원 README를 보고 주석을 풀어 설치하세요.
+# 3단계 17단원부터 — 해당 단원 README를 보고 주석을 풀어 설치하세요.
 # fastapi
-# httpx
+# httpx          # TestClient 가 씁니다
 # uvicorn
 
-# 7단계(44단원)부터
+# 4~5단계 선택 도구 (24, 29, 34단원)
+# coverage
+# pip-audit
+# bandit
+# ruff
+# pyyaml         # 34단원 CI 설정 파일을 읽는 테스트
+
+# 6~7단계 (43, 44단원부터) — 테스트는 이것 없이도 돕니다. 실제 호출 과제에서만 필요합니다.
+# mcp[cli]
 # anthropic
+# python-dotenv

@@ -17,6 +17,22 @@ from todo.storage_document import DocumentTaskStore
 from todo.storage_sqlite import SqliteTaskStore
 
 
+class NotYetImplemented:
+    """픽스처 안에서 아직 구현되지 않은 메서드를 만났을 때 돌려주는 대역.
+
+    픽스처에서 예외가 나면 pytest 는 ERROR 로 표시한다. 대신 이 객체를 돌려주고, 테스트가 처음 쓰는 순간
+    분명한 메시지로 FAILED 가 되게 한다.
+    """
+
+    def __init__(self, what: str) -> None:
+        self.what = what
+
+    def _fail(self, *args, **kwargs):
+        pytest.fail(f"{self.what} 을(를) 아직 구현하지 않음")
+
+    __getattr__ = __len__ = __iter__ = __call__ = _fail
+
+
 @pytest.fixture
 def conn():
     connection = sqlite3.connect(":memory:")
@@ -198,8 +214,11 @@ def graph(conn):
     s.init_schema()
     for title in ["기초", "중급", "고급", "독립"]:
         s.add(title)
-    s.add_dependency(2, 1)
-    s.add_dependency(3, 2)
+    try:
+        s.add_dependency(2, 1)
+        s.add_dependency(3, 2)
+    except NotImplementedError:
+        return NotYetImplemented("SqliteTaskStore.add_dependency")
     return s
 
 

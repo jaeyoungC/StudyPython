@@ -30,9 +30,15 @@ def notifier():
 @pytest.fixture
 def worker(notifier):
     worker = NotificationWorker(notifier)
-    worker.start()
+    try:
+        worker.start()
+    except NotImplementedError:
+        pytest.fail("NotificationWorker 를 아직 구현하지 않음")
     yield worker
-    worker.stop(drain=False)  # 테스트가 끝나면 남은 것은 버리고 스레드를 정리한다
+    try:
+        worker.stop(drain=False)  # 테스트가 끝나면 남은 것은 버리고 스레드를 정리한다
+    except NotImplementedError:
+        pass  # 아직 구현 전이면 정리할 스레드도 없다
 
 
 @pytest.fixture

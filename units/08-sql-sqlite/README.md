@@ -74,8 +74,8 @@ sequenceDiagram
 `todo/storage_sqlite.py` 의 `TODO` 를 채워 `pytest units/08-sql-sqlite` 를 모두 통과시키세요.
 `todo/` 안의 다른 파일은 07단원까지의 완성본입니다. 내 07단원 코드와 비교해 보고, 다르면 왜 다른지 생각해 보세요.
 
-처음 실행하면 대부분이 FAILED 가 아니라 **ERROR** 로 보입니다. 테스트가 쓰는 `store` 픽스처(fixture)가 `init_schema()` 를
-부르는데 그것이 아직 `NotImplementedError` 를 던지기 때문입니다. `init_schema` 부터 구현하면 ERROR 가 FAILED 로 바뀝니다.
+처음 실행하면 거의 모든 테스트가 "SqliteTaskStore.init_schema 을(를) 아직 구현하지 않음" 으로 실패합니다. 테스트가 쓰는 `store`
+픽스처(fixture)가 `init_schema()` 를 부르기 때문입니다. `init_schema` 부터 구현하면 각 테스트가 진짜 이유로 실패하기 시작합니다.
 
 | 만들 것 | 하는 일 | 관련 테스트 |
 | --- | --- | --- |
