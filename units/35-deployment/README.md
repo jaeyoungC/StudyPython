@@ -34,7 +34,7 @@ flowchart LR
 
 ## 과제
 
-이 단원은 ◐ 입니다. `app_config.py` 와 `test_unit35.py` 의 12개 뼈대(parametrize 포함 19개 수집)를 채우고, 실제로 배포합니다.
+이 단원은 ◐ 입니다. `app_config.py` 와 `test_unit35.py` 의 12개 뼈대(parametrize 포함 18개 수집)를 채우고, 실제로 배포합니다.
 
 | 할 일 | 하는 일 |
 | --- | --- |
