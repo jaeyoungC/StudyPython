@@ -2,4 +2,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.db
-*.json.tmp
+*.tmp
+.env

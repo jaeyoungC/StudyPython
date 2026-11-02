@@ -1,5 +1,10 @@
+# 0~2단계: 표준 라이브러리 + pytest 만 있으면 됩니다.
 pytest>=8
-# 8주차부터 사용
+
+# 3단계(17단원)부터 — 해당 단원 README를 보고 주석을 풀어 설치하세요.
 # fastapi
-# uvicorn
 # httpx
+# uvicorn
+
+# 7단계(44단원)부터
+# anthropic
