@@ -26,6 +26,30 @@
 `call_with_timeout` 은 `concurrent.futures` 로 함수를 다른 스레드에 보내고 `future.result(timeout=)` 로 기다립니다.
 Python 3.11부터 `concurrent.futures.TimeoutError` 는 내장 `TimeoutError` 와 같은 클래스입니다.
 
+`retry(attempts=3, base_delay=1, max_delay=10)` 이 `MaxRng`(지터 최대) 로 움직이는 모습입니다.
+
+```mermaid
+sequenceDiagram
+    participant R as retry()
+    participant F as fn (외부 호출)
+    participant S as sleep
+    R->>F: 시도 1 (attempt 0)
+    F-->>R: ConnectionError
+    R->>S: backoff_delay(0) = 1.0초
+    R->>F: 시도 2 (attempt 1)
+    F-->>R: TimeoutError
+    R->>S: backoff_delay(1) = 2.0초
+    R->>F: 시도 3 (attempt 2)
+    alt 성공
+        F-->>R: 결과 반환
+    else 또 실패
+        F-->>R: 예외
+        Note over R: sleep 없이 RetryError (from 마지막 예외)
+    end
+```
+
+읽는 법: `sleep` 은 시도와 시도 **사이**에만 불리고 대기 시간은 두 배씩 늘며(실제로는 0~상한 사이의 난수), 마지막 실패 뒤에는 자지 않고 바로 `RetryError` 를 던집니다.
+
 ## 과제
 
 `retry.py` 의 `TODO` 를 채워 `pytest units/25-timeouts-and-retries` 를 통과시키세요.

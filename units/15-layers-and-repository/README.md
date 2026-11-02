@@ -32,6 +32,22 @@
 pytest 새 기능 하나: `@pytest.fixture(params=[...])`. 픽스처에 params 를 주면 그 픽스처를 쓰는 테스트가 param 수만큼 반복됩니다.
 `parametrize` 가 **입력**을 바꾼다면, params 픽스처는 **환경**을 바꿉니다.
 
+```mermaid
+flowchart LR
+    CLI[화면: cli.py] --> SVC[서비스: TaskService<br/>규칙만]
+    HTTP[화면: 16·17단원 HTTP] -.다음 단원.-> SVC
+    SVC --> P{{Protocol: TaskRepository}}
+    P --> M[MemoryTaskRepository]
+    P --> J[JsonTaskRepository]
+    P --> Q[SqliteTaskRepository]
+    CLK[clock 함수] -. 주입 .-> SVC
+    M -.-> F[(TaskList)]
+    J -.-> G[(todo.json)]
+    Q -.-> H[(SQLite)]
+```
+
+화살표는 "누가 누구를 아는가"입니다. 아래로만 향하고, 서비스는 Protocol 까지만 알며, 어떤 구현과 어떤 시계를 쓸지는 바깥(생성자 호출자)이 꽂아 줍니다.
+
 ## 과제
 
 `todo/repository.py` 와 `todo/service.py` 의 `TODO` 를 채워 `pytest units/15-layers-and-repository` 를 통과시키세요.

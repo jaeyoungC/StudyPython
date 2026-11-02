@@ -14,6 +14,32 @@
 사람 3명이 하루 20번 누르던 API를, 에이전트 하나가 1분에 60번 부를 수 있습니다. 26단원(멱등성)·27단원(속도 제한)에서 "에이전트 재시도"와 "에이전트의 대량 호출"을 예고했던 것이 여기서 합쳐집니다.
 노트의 표는 그대로 **점검표**가 됩니다.
 
+```mermaid
+sequenceDiagram
+    participant A as 에이전트
+    participant M as MCP 서버 (mcp_tools.py)
+    participant S as 서비스 · 리포지토리
+    A->>M: add_task(title, idempotency_key)
+    M->>M: 속도 제한 확인 (27)
+    alt 한도 초과
+        M-->>A: error rate_limited + Retry-After
+    else 허용
+        M->>M: 멱등성 키 조회 (26)
+        alt 같은 키 있음
+            M-->>A: 저장된 결과 그대로
+        else 새 키
+            M->>S: add(title)
+            S-->>M: Task
+            M-->>A: ok + 최소 필드 (창 절약)
+        end
+    end
+    A->>M: list_tasks(limit=20, cursor)
+    M->>S: 인덱스 타는 조회 (10)
+    M-->>A: items + next_cursor
+```
+
+읽는 법: 위에서 아래로 시간이 흐르며, 에이전트의 재시도·대량 호출이 서비스에 닿기 **전에** MCP 계층에서 속도 제한과 멱등성 키가 걸러 내는 지점을 보세요.
+
 | 노트의 표 | 이 저장소에서 이미 만든 것 | 이번에 확인할 것 |
 | --- | --- | --- |
 | 속도 제한·캐시·비용 | 27 토큰 버킷, 19 ETag·서비스 캐시 | 에이전트 클라이언트별 한도, 429에 `Retry-After`가 있는가 |

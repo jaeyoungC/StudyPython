@@ -26,6 +26,25 @@ HTTP 요청과 응답이 **텍스트 몇 줄**이라는 것을 `curl` 로 눈으
 테스트는 서버를 **별도 스레드**(11단원에서 썼던 `threading.Thread`)에서 `port=0` 으로 띄웁니다. 0을 주면 운영체제가 빈 포트를 골라 주어
 테스트가 서로, 또 내가 띄워 둔 서버와 부딪히지 않습니다.
 
+```mermaid
+sequenceDiagram
+    participant C as 클라이언트 (curl / urllib)
+    participant H as TodoHandler (do_POST)
+    participant S as TaskService
+    C->>H: POST /tasks/1/complete HTTP/1.1<br/>Host, Content-Length: 0
+    H->>H: _route(): 경로·쿼리 나누기
+    H->>S: complete(1)
+    alt 처음 완료
+        S-->>H: Task(done=True)
+        H-->>C: HTTP/1.1 200 OK<br/>Content-Type: application/json<br/>{"id":1,"done":true,...}
+    else 이미 완료
+        S-->>H: raise AlreadyDoneError
+        H-->>C: HTTP/1.1 409 Conflict<br/>{"error":{"code":"already_done",...}}
+    end
+```
+
+위에서 아래로 시간이 흐릅니다. 요청 한 덩어리(시작 줄·헤더·본문)가 들어오면 핸들러가 서비스를 한 번 부르고, 서비스의 **반환값 또는 예외**가 상태 코드로 번역되어 한 덩어리로 돌아갑니다.
+
 ## 과제
 
 ### 1부 — 손으로 HTTP 보내 보기 (코드 없음, 결과를 NOTES.md 에 붙이기)

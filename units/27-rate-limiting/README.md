@@ -23,6 +23,18 @@
 다른 알고리즘도 있습니다. 고정 윈도(fixed window)는 "분당 60개"를 세지만 59초와 61초에 60개씩 보내면 2초 만에 120개가 통과합니다.
 슬라이딩 윈도(sliding window)는 그것을 고치지만 요청 기록을 들고 있어야 합니다. 토큰 버킷은 키당 숫자 두 개(토큰, 마지막 시각)면 충분해 가장 널리 쓰입니다.
 
+```mermaid
+flowchart TD
+    A["요청 도착 (key, cost)"] --> B["리필: tokens = min(capacity,<br/>tokens + (now - last) × rate)"]
+    B --> C{"tokens ≥ cost ?"}
+    C -->|예| D["tokens -= cost"]
+    D --> E["허용 (True, 0.0)"]
+    C -->|아니오| F["retry_after = (cost - tokens) / rate"]
+    F --> G["거절 (False, retry_after)<br/>→ 429 + Retry-After"]
+```
+
+읽는 법: 타이머 없이 요청이 올 때마다 "지난 시간 × rate" 만큼 한 번에 채운 뒤 비교하므로, 시계만 주입하면 테스트에서 기다릴 필요가 없습니다.
+
 ## 과제
 
 `ratelimit.py` 의 `TODO` 를 채워 `pytest units/27-rate-limiting` 를 통과시키세요.

@@ -27,6 +27,22 @@ OpenAPI 문서가 자동으로 나옵니다. 이후 18~22단원은 전부 이 AP
 OpenAPI 는 "이 API 에 어떤 경로·입력·출력·오류가 있는가"를 기계가 읽는 JSON 으로 적은 것입니다. 앱을 띄우고 `/docs` 를 열면 그 문서가 화면이 됩니다.
 43단원에서 에이전트에게 도구를 설명할 때 같은 정보가 다시 필요합니다.
 
+```mermaid
+flowchart LR
+    R[요청] --> V[Pydantic 검증<br/>TaskIn · Query]
+    V -- 형식 오류 --> E422[422 validation_error]
+    V --> EP[경로 함수<br/>POST /tasks, GET /tasks ...]
+    EP --> SVC[TaskService]
+    SVC --> REPO[(리포지토리)]
+    SVC -- TaskNotFoundError --> E404[404 not_found]
+    SVC -- AlreadyDoneError --> E409[409 already_done]
+    SVC -- ValueError --> E422
+    EP -- 정상 --> OUT[TaskOut / TaskPage]
+    E404 & E409 & E422 --> ENV["{ error: { code, message } }"]
+```
+
+왼쪽에서 오른쪽으로 요청이 흐르고, 어느 단계에서 튕기든 오른쪽 아래의 **같은 봉투**로 모입니다. 16단원과 달라진 것은 검증(Pydantic)과 예외 번역(핸들러)을 프레임워크가 맡는다는 점뿐입니다.
+
 ### 준비
 
 ```sh

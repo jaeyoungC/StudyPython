@@ -32,6 +32,30 @@
 마지막 줄이 중요합니다. 실패한 시도를 저장하면 "DB가 잠깐 잠겼다"가 영구 실패로 굳습니다. 반대로 **4xx 응답은 저장**합니다.
 빈 제목으로 보낸 요청은 다시 보내도 빈 제목이니까요(`test_stored_error_responses_are_replayed_too`).
 
+25단원의 재시도 클라이언트가 타임아웃 뒤 같은 요청을 다시 보내는 상황입니다.
+
+```mermaid
+sequenceDiagram
+    participant C as 클라이언트 (retry)
+    participant A as todo API
+    participant K as 멱등성 저장소
+    participant D as 할 일 DB
+    C->>A: POST /tasks, Idempotency-Key: k1, {"title":"a"}
+    A->>K: get(k1)
+    K-->>A: 없음
+    A->>D: INSERT → id 1
+    A->>K: put(k1, 지문, 201 {"id":1})
+    Note over A,C: 응답이 네트워크에서 유실 → 클라이언트는 타임아웃
+    C->>A: (재시도) POST /tasks, Idempotency-Key: k1, {"title":"a"}
+    A->>K: get(k1)
+    K-->>A: (지문 같음, 201 {"id":1})
+    A-->>C: 201 {"id":1}, Idempotent-Replayed: true
+    C->>A: POST /tasks, Idempotency-Key: k1, {"title":"b"}
+    A-->>C: 422 키 재사용 (DB 접근 없음)
+```
+
+읽는 법: 두 번째 화살표 묶음에서 DB 에는 아무 접근이 없고 저장소에서 꺼낸 응답만 돌아가며, 마지막처럼 같은 키에 다른 본문이 오면 실행 없이 422 입니다.
+
 ## 과제
 
 `idempotency.py` 의 `TODO` 를 채워 `pytest units/26-idempotency` 를 통과시키세요.
