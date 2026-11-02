@@ -1,0 +1,54 @@
+# 37단원: 로드 밸런서(nginx) + 앱 인스턴스 2개. 저장소 루트에 docker-compose.yml 로 복사한 뒤 TODO 를 채우세요.
+# 실행: docker compose up --build    확인: curl -i localhost:8080/health 를 여러 번 — X-Instance 헤더가 번갈아 나와야 한다.
+
+services:
+  app1:
+    build: .
+    environment:
+      TODO_API_SECRET: ${TODO_API_SECRET:?TODO_API_SECRET 를 .env 에 설정하세요}
+      TODO_HOST: 0.0.0.0
+      TODO_PORT: 8000
+      TODO_DATABASE_PATH: /data/todo.db
+      TODO_INSTANCE_ID: app1          # 응답 헤더 X-Instance 로 노출 → 어느 인스턴스가 응답했는지 눈으로 본다
+      TODO_SESSION_STORE: sqlite      # 세션 외부화(session_store.py). memory 로 바꾸면 로그인이 인스턴스마다 끊긴다
+    volumes:
+      - todo-data:/data               # 두 인스턴스가 같은 SQLite 파일을 공유 — 11단원의 잠금 문제가 여기서 다시 나온다
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app2:
+    build: .
+    environment:
+      TODO_API_SECRET: ${TODO_API_SECRET:?TODO_API_SECRET 를 .env 에 설정하세요}
+      TODO_HOST: 0.0.0.0
+      TODO_PORT: 8000
+      TODO_DATABASE_PATH: /data/todo.db
+      TODO_INSTANCE_ID: app2
+      TODO_SESSION_STORE: sqlite
+    volumes:
+      - todo-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  lb:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app1:
+        condition: service_healthy
+      app2:
+        condition: service_healthy
+
+  # TODO (선택): notifier 서비스와 워커를 추가한다. 워커는 1개만 — 2개면 같은 알림을 두 번 보낸다(26단원의 멱등성이 없다면)
+
+volumes:
+  todo-data:
